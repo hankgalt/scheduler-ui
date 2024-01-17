@@ -5,8 +5,6 @@ module.exports = {
   transform: {
     '^.+\\.ts?$': 'ts-jest',
     '^.+\\.tsx?$': 'ts-jest',
-    '^.+\\.js?$': 'babel-jest',
-    '^.+\\.jsx?$': 'babel-jest',
-    '^.+\\.scss$': 'jest-scss-transform',
   },
+  setupFiles: ['<rootDir>/.jest/envVars.js'],
 };

@@ -1,11 +1,10 @@
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import {
-  GCLOUD_BUCKET_DEV,
   uploadFile,
   listFiles,
   StorageFile,
-} from '../services/cloud';
+} from '@hankgalt/cloud-storage-client';
 
 const router = express.Router();
 
@@ -40,8 +39,9 @@ router.get('/other', (req: Request, res: Response) => {
 });
 
 router.get('/file/list', async (req: Request, res: Response) => {
+  const bucket = process.env.GCLOUD_BUCKET || '';
   try {
-    const { files, error } = await listFiles(GCLOUD_BUCKET_DEV);
+    const { files, error } = await listFiles(bucket);
     if (error) {
       res.status(500).json({ error });
       return;
@@ -62,8 +62,9 @@ router.post('/upload', upload.array('files'), async function (req, res) {
     : null;
 
   if (uploadedFile) {
+    const bucket = process.env.GCLOUD_BUCKET || '';
     try {
-      const { files, error } = await listFiles(GCLOUD_BUCKET_DEV);
+      const { files, error } = await listFiles(bucket);
       if (error) {
         console.log(
           '/upload: error fetching file list from storage bucket',

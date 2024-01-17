@@ -1,5 +1,4 @@
 import { useDataFetch } from '../../utils/hooks';
-
 export interface BizResponse {
   message: string;
 }

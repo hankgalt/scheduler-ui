@@ -3,5 +3,7 @@ build/
 coverage/
 *.log
 
+.jest
+env
 creds
 public/uploads/*

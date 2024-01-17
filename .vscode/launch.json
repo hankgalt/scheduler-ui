@@ -12,7 +12,8 @@
       "type": "node-terminal",
       "request": "launch",
       "name": "Prod Server",
-      "command": "yarn start"
+      "command": "yarn start",
+      "envFile": "${workspaceFolder}/env/development.env"
     },
     {
       "type": "node-terminal",
