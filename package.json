@@ -6,7 +6,7 @@
   "scripts": {
     "tsc": "tsc",
     "start": "NODE_ENV=production node build/server.bundle.js",
-    "build": "tsc && npm run clean:build && npm run build:client:prod && npm run build:server:prod",
+    "build": "npm run lint-fix && npm run format && tsc && npm run clean:build && npm run build:client:prod && npm run build:server:prod",
     "clean:build": "rm -rf build && mkdir build",
     "start:client:dev": "webpack serve --config webpack/webpack.dev.config.js --mode=development",
     "start:server:dev": "webpack --watch --progress --config webpack/webpack.server.config.js --mode=development",
@@ -24,6 +24,7 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@google-cloud/storage": "^7.7.0",
+    "@mui/icons-material": "^5.15.4",
     "@mui/material": "^5.15.4",
     "@mui/system": "^5.15.4",
     "@react-icons/all-files": "^4.1.0",

@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Prod Server",
+      "command": "yarn start"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Client browser app",
+      "command": "yarn start:client:dev"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest single run all tests",
+      "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+      "args": [
+        "-c",
+        "${workspaceRoot}/jest.config.ts",
+        "--verbose",
+        "-i",
+        "--no-cache"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

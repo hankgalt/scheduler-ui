@@ -18,6 +18,9 @@ const options: cors.CorsOptions = {
 
 app.use(cors(options));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.static(path.join(__dirname, staticDir)));
 
 // API Routes

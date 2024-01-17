@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useFetch } from 'usehooks-ts';
-
-const BASE_URL = `http://localhost:4000`;
+import { BASE_URL } from '../index';
 
 export function useDataFetch<T>(url: string) {
   const { data, error } = useFetch<T>(`${BASE_URL}${url}`);

@@ -1,9 +1,10 @@
 {
   "include": [
-    "/server/**/*.ts",
+    "./server/**/*.ts",
     "./src/**/*.tsx",
     "./src/lib/services/**/*.ts",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "src/lib/index.ts"
   ],
   "exclude": ["./node_modules/*"],
   "compilerOptions": {

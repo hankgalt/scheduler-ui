@@ -63,3 +63,6 @@ export const mapToFilesResponse = (files: File[]): FilesResponse => {
     files: files.map(mapToStorageFile),
   };
 };
+
+export { uploadFile } from './upload-file';
+export { listFiles } from './list-files';

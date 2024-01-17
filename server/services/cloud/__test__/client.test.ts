@@ -1,8 +1,6 @@
 import { getFile } from '../get-file';
-import { listFiles } from '../list-files';
 import { deleteFile } from '../delete-file';
-import { uploadFile } from '../upload-file';
-import { GCLOUD_BUCKET_DEV } from '../index';
+import { GCLOUD_BUCKET_DEV, uploadFile, listFiles } from '../index';
 
 describe('gcloud client', () => {
   test('listFiles', async () => {
