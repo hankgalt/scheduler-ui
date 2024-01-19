@@ -2,7 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import { useBizFetch } from './lib/services/biz';
-import { FileUpload } from './components/FileUpload';
+import { FileUpload } from './components/file/FileUpload';
 import { Loader } from './components/Loader';
 
 const App = () => {
@@ -10,6 +10,7 @@ const App = () => {
 
   return (
     <React.Suspense fallback={<Loader />}>
+      {loading && <Loader />}
       <Box sx={{ padding: '5px' }}>
         <Grid container spacing={1}>
           {error && (

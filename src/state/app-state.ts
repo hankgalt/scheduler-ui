@@ -1,7 +1,17 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { FileResponse } from '@hankgalt/cloud-storage-client/lib/index';
+import type {
+  FileResponse,
+  FilesResponse,
+  FileRequest,
+  StorageFile,
+} from '@hankgalt/cloud-storage-client';
 import { RootState } from './store';
-import { uploadFile } from '../lib/services/file';
+import {
+  apiUploadFile,
+  apiListBucketFiles,
+  apiDeleteFile,
+} from '../lib/services/file';
+import type { FileInformation } from '../lib/utils/helpers';
 
 interface ModalProps {
   type: string;
@@ -11,26 +21,36 @@ interface AppState {
   loading: boolean;
   errors: string[];
   modal?: ModalProps;
+  uploadedFiles: { [key: string]: StorageFile };
+  fileInfos: { [key: string]: FileInformation };
 }
 
 export const uploadSingleFile = createAsyncThunk(
-  '/upload',
+  '/file/upload',
   async (data: FormData) => {
-    try {
-      const res = await uploadFile(data);
-      const response = await res.json();
-      console.log('file upload response: ', response);
-      return response;
-    } catch (error) {
-      console.error('Error uploading files: ', error);
-      return { error };
-    }
+    return await apiUploadFile(data);
+  }
+);
+
+export const getFileList = createAsyncThunk(
+  '/file/list',
+  async (bucket: string | undefined) => {
+    return await apiListBucketFiles(bucket);
+  }
+);
+
+export const deleteUploadedFile = createAsyncThunk(
+  '/file/delete',
+  async (data: FileRequest) => {
+    return await apiDeleteFile(data);
   }
 );
 
 const initialState: AppState = {
   loading: false,
   errors: [],
+  uploadedFiles: {},
+  fileInfos: {},
 };
 
 export const appStateSlice = createSlice({
@@ -52,33 +72,88 @@ export const appStateSlice = createSlice({
         state.modal = undefined;
       }
     },
+    updateFileInfo: (state, action: PayloadAction<FileInformation>): void => {
+      const fileInfo = action.payload;
+      state.fileInfos = {
+        ...state.fileInfos,
+        [fileInfo.name]: fileInfo,
+      };
+    },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // uploadSingleFile
-    builder.addCase(uploadSingleFile.pending, (state) => {
-      state.loading = true
+    builder.addCase(uploadSingleFile.pending, state => {
+      state.loading = true;
     }),
       builder.addCase(
         uploadSingleFile.fulfilled,
         (state, action: PayloadAction<FileResponse>) => {
-          state.loading = false
+          state.loading = false;
           if (!action.payload.error) {
-            state.errors = []
+            state.errors = [];
           } else {
             if (action.payload.error) {
-              state.errors = [action.payload.error.message]
+              state.errors = [action.payload.error.message];
             }
           }
         }
       ),
-      builder.addCase(uploadSingleFile.rejected, (state) => {
-        state.loading = false
-        state.errors = ['Error uploading file, request rejected']
-      })
-  }
+      builder.addCase(uploadSingleFile.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error uploading file, request rejected'];
+      }),
+      // getFileList
+      builder.addCase(getFileList.pending, state => {
+        state.loading = true;
+      }),
+      builder.addCase(
+        getFileList.fulfilled,
+        (state, action: PayloadAction<FilesResponse>) => {
+          state.loading = false;
+          if (!action.payload.error && action.payload.files) {
+            state.errors = [];
+            let payloadFiles = {};
+            for (const file of action.payload.files) {
+              payloadFiles = {
+                ...payloadFiles,
+                [file.name]: file,
+              };
+            }
+            state.uploadedFiles = { ...payloadFiles };
+          } else {
+            if (action.payload.error) {
+              state.errors = [action.payload.error.message];
+            }
+          }
+        }
+      ),
+      builder.addCase(getFileList.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error deleting file, request rejected'];
+      }),
+      // deleteUploadedFile
+      builder.addCase(deleteUploadedFile.pending, state => {
+        state.loading = true;
+      }),
+      builder.addCase(
+        deleteUploadedFile.fulfilled,
+        (state, action: PayloadAction<FilesResponse>) => {
+          state.loading = false;
+          if (!action.payload.error) {
+            state.errors = [];
+          } else {
+            state.errors = [action.payload.error.message];
+          }
+        }
+      ),
+      builder.addCase(deleteUploadedFile.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error deleting file, request rejected'];
+      });
+  },
 });
 
-export const { setModal, removeModal } = appStateSlice.actions;
+export const { setModal, removeModal, updateFileInfo } = appStateSlice.actions;
 
 export const appState = (state: RootState) => state.appState;
 

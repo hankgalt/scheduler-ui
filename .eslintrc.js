@@ -61,6 +61,7 @@ module.exports = {
       rules: {
         'no-console': 0,
         '@typescript-eslint/no-explicit-any': 0,
+        'react/display-name': 'off',
       },
     },
   ],

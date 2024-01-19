@@ -1,7 +1,8 @@
 import path from 'path';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import apiRoutes from './routes/api';
+import apiRoutes from './routes';
+import fileAPIRoutes from './routes/file';
 
 const { PORT, NODE_ENV } = process.env;
 const app: express.Application = express();
@@ -23,7 +24,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, staticDir)));
 
-// API Routes
+// File API Routes
+app.use('/api/file', fileAPIRoutes);
+
+// Other API Routes
 app.use('/api', apiRoutes);
 
 app.get('/*', (_req: Request, res: Response): void => {

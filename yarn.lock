@@ -1522,10 +1522,10 @@
     teeny-request "^9.0.0"
     uuid "^8.0.0"
 
-"@hankgalt/cloud-storage-client@^0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@hankgalt/cloud-storage-client/-/cloud-storage-client-0.0.10.tgz#d2e5d70af5fa6d1502e20a9b2d80469e45ca9465"
-  integrity sha512-M6zioiDovN4HF/Gpkv4vlMSoPQaejnZRL8Z4uBPcLQHd6m/DIS0JV0/+Ab69F3FwVKCIEoTE0ygigEEWeBxNnQ==
+"@hankgalt/cloud-storage-client@0.0.20":
+  version "0.0.20"
+  resolved "https://registry.yarnpkg.com/@hankgalt/cloud-storage-client/-/cloud-storage-client-0.0.20.tgz#a834fad6481f27ac3c64772a9a185e11cd321689"
+  integrity sha512-rw/XHijrEkOSUrlUUZyTcgc1fQKJkMnyfHTe5FGpanfMlHoRVCg7x/3LYhp9fWhBzLwFj3JlvJqCNQowhpZTyQ==
   dependencies:
     "@google-cloud/storage" "^7.7.0"
 
@@ -1922,11 +1922,6 @@
   version "2.11.8"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
-
-"@react-icons/all-files@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/@react-icons/all-files/-/all-files-4.1.0.tgz#477284873a0821928224b6fc84c62d2534d6650b"
-  integrity sha512-hxBI2UOuVaI3O/BhQfhtb4kcGn9ft12RWAFVMUeNjqqhLsHvFtzIkFaptBJpFDANTKoDfdVoHTKZDlwKCACbMQ==
 
 "@reduxjs/toolkit@^2.0.1":
   version "2.0.1"

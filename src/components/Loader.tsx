@@ -1,10 +1,11 @@
 import React from 'react';
-import { VscLoading } from '@react-icons/all-files/vsc/VscLoading';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export const Loader = (): JSX.Element => {
   return (
-    <React.Fragment>
-      <VscLoading />
-    </React.Fragment>
+    <Box sx={{ display: 'flex' }}>
+      <CircularProgress />
+    </Box>
   );
 };
