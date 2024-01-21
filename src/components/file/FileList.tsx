@@ -14,6 +14,7 @@ import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import PreviewIcon from '@mui/icons-material/Preview';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Loader } from '../Loader';
 import type { StorageFile } from '@hankgalt/cloud-storage-client';
@@ -24,6 +25,7 @@ import {
   removeModal,
   getFileList,
   deleteUploadedFile,
+  searchWorkflowRuns,
 } from '../../state/app-state';
 import { ModalWithStoreHOC } from '../HOC/ModalWithStoreHOC';
 
@@ -54,7 +56,9 @@ export const FileList = ({ files }: { files: FileInformation[] }) => {
             <TableHeaderCell>Type</TableHeaderCell>
             <TableHeaderCell>Headers</TableHeaderCell>
             <TableHeaderCell>Samples</TableHeaderCell>
-            <TableHeaderCell>Actions</TableHeaderCell>
+            <TableCell sx={{ width: '200px', fontSize: '2rem' }}>
+              Actions
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -71,7 +75,7 @@ export const FileList = ({ files }: { files: FileInformation[] }) => {
                   {file.headers ? file.headers.join(', ') : ''}
                 </Typography>
               </TableRowCell>
-              <TableRowCell>
+              <TableCell sx={{ width: '180px', fontSize: '1.5rem' }}>
                 {file.samples &&
                   file.samples.length > 0 &&
                   file.samples.map((sample, idx) => (
@@ -84,7 +88,7 @@ export const FileList = ({ files }: { files: FileInformation[] }) => {
                         : JSON.stringify(sample)}
                     </Typography>
                   ))}
-              </TableRowCell>
+              </TableCell>
               <TableRowCell>
                 <Grid container spacing={1}>
                   <Grid item>
@@ -102,7 +106,7 @@ export const FileList = ({ files }: { files: FileInformation[] }) => {
 
 export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
   const dispatch = useAppDispatch();
-  const { fileInfos, loading, errors } = useAppSelector(appState);
+  const { fileInfos } = useAppSelector(appState);
 
   const handleDelete = (name: string, version: number | string) => {
     if (version === '' || name === '') return;
@@ -112,35 +116,13 @@ export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
     });
   };
 
+  const handleValidate = (name: string) => {
+    if (name === '') return;
+    dispatch(searchWorkflowRuns({ externalRef: name }));
+  };
+
   return (
     <Grid container spacing={1}>
-      {loading && (
-        <Grid
-          item
-          xs={12}
-          sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
-        >
-          <Loader />
-          <Typography variant={'h3'}>Loading...</Typography>
-        </Grid>
-      )}
-      {errors.length > 0 && (
-        <Grid
-          item
-          xs={12}
-          sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
-        >
-          {errors.map((error, index) => (
-            <Typography
-              key={`${index}-error`}
-              sx={{ color: 'red' }}
-              variant={'h4'}
-            >
-              {error}
-            </Typography>
-          ))}
-        </Grid>
-      )}
       <Grid item xs={12}>
         <TableContainer component={Paper}>
           <Table stickyHeader size='small'>
@@ -152,7 +134,9 @@ export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
                 <TableHeaderCell>Bucket</TableHeaderCell>
                 <TableHeaderCell>Created At</TableHeaderCell>
                 <TableHeaderCell>Updated At</TableHeaderCell>
-                <TableHeaderCell>Actions</TableHeaderCell>
+                <TableCell sx={{ width: '200px', fontSize: '2rem' }}>
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -167,7 +151,7 @@ export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
                   <TableRowCell>{file.bucket}</TableRowCell>
                   <TableRowCell>{file.createdAt}</TableRowCell>
                   <TableRowCell>{file.updatedAt}</TableRowCell>
-                  <TableRowCell>
+                  <TableCell sx={{ width: '180px', fontSize: '1.5rem' }}>
                     <Grid container spacing={1}>
                       <Grid item>
                         <Tooltip
@@ -200,6 +184,17 @@ export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
                       </Grid>
                       <Grid item>
                         <Tooltip
+                          title='validate'
+                          placement='top-start'
+                          sx={{ fontSize: '1.5rem' }}
+                        >
+                          <IconButton onClick={() => handleValidate(file.name)}>
+                            <TaskAltIcon color={'info'} fontSize='large' />
+                          </IconButton>
+                        </Tooltip>
+                      </Grid>
+                      <Grid item>
+                        <Tooltip
                           title='delete'
                           placement='top-start'
                           sx={{ fontSize: '1.5rem' }}
@@ -217,7 +212,7 @@ export const StorageFileList = ({ files }: { files: StorageFile[] }) => {
                         </Tooltip>
                       </Grid>
                     </Grid>
-                  </TableRowCell>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -287,12 +282,16 @@ export const StorageFileListModal = ({
             </Grid>
           )}
           {errors.length > 0 && (
-            <Grid item xs={12}>
+            <Grid
+              item
+              xs={12}
+              sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
+            >
               {errors.map((error, index) => (
                 <Typography
                   key={`${index}-error`}
                   sx={{ color: 'red' }}
-                  variant={'h4'}
+                  variant={'h6'}
                 >
                   {error}
                 </Typography>

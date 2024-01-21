@@ -5,12 +5,18 @@ import type {
   FileRequest,
   StorageFile,
 } from '@hankgalt/cloud-storage-client';
+import type {
+  WorkflowRunSearchParams,
+  WorkflowRunsResponse,
+  SchedulerWorkflowRun,
+} from '@hankgalt/scheduler-client';
 import { RootState } from './store';
 import {
   apiUploadFile,
   apiListBucketFiles,
   apiDeleteFile,
 } from '../lib/services/file';
+import { apiSearchWorkflowRuns } from '../lib/services/biz';
 import type { FileInformation } from '../lib/utils/helpers';
 
 interface ModalProps {
@@ -23,6 +29,7 @@ interface AppState {
   modal?: ModalProps;
   uploadedFiles: { [key: string]: StorageFile };
   fileInfos: { [key: string]: FileInformation };
+  runs: { [key: string]: SchedulerWorkflowRun };
 }
 
 export const uploadSingleFile = createAsyncThunk(
@@ -46,11 +53,20 @@ export const deleteUploadedFile = createAsyncThunk(
   }
 );
 
+export const searchWorkflowRuns = createAsyncThunk(
+  '/workflow/search',
+  async (params: WorkflowRunSearchParams) => {
+    console.log('searchWorkflowRuns - params', params);
+    return await apiSearchWorkflowRuns(params);
+  }
+);
+
 const initialState: AppState = {
   loading: false,
   errors: [],
   uploadedFiles: {},
   fileInfos: {},
+  runs: {},
 };
 
 export const appStateSlice = createSlice({
@@ -93,7 +109,7 @@ export const appStateSlice = createSlice({
             state.errors = [];
           } else {
             if (action.payload.error) {
-              state.errors = [action.payload.error.message];
+              state.errors = [JSON.stringify(action.payload.error)];
             }
           }
         }
@@ -147,6 +163,35 @@ export const appStateSlice = createSlice({
         }
       ),
       builder.addCase(deleteUploadedFile.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error deleting file, request rejected'];
+      }),
+      // searchWorkflowRuns
+      builder.addCase(searchWorkflowRuns.pending, state => {
+        state.loading = true;
+      }),
+      builder.addCase(
+        searchWorkflowRuns.fulfilled,
+        (state, action: PayloadAction<WorkflowRunsResponse>) => {
+          state.loading = false;
+          if (!action.payload.error) {
+            state.errors = [];
+            if (action.payload.runs) {
+              let runs = {};
+              for (const run of action.payload.runs) {
+                runs = {
+                  ...runs,
+                  [run.workflowId]: run,
+                };
+              }
+              state.runs = { ...runs };
+            }
+          } else {
+            state.errors = [JSON.stringify(action.payload.error)];
+          }
+        }
+      ),
+      builder.addCase(searchWorkflowRuns.rejected, state => {
         state.loading = false;
         state.errors = ['Error deleting file, request rejected'];
       });

@@ -6,4 +6,5 @@ coverage/
 .jest
 env
 creds
+certs
 public/uploads/*

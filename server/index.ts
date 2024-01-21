@@ -1,8 +1,10 @@
 import path from 'path';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import bodyParser from 'body-parser';
 import apiRoutes from './routes';
 import fileAPIRoutes from './routes/file';
+import workflowAPIRoutes from './routes/workflow';
 
 const { PORT, NODE_ENV } = process.env;
 const app: express.Application = express();
@@ -19,13 +21,16 @@ const options: cors.CorsOptions = {
 
 app.use(cors(options));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 app.use(express.static(path.join(__dirname, staticDir)));
+
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 
 // File API Routes
 app.use('/api/file', fileAPIRoutes);
+
+// Workflow API Routes
+app.use('/api/workflow', workflowAPIRoutes);
 
 // Other API Routes
 app.use('/api', apiRoutes);
