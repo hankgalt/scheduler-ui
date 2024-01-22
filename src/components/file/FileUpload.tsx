@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -6,19 +6,35 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { Loader } from '../Loader';
 import { useOtherFetch } from '../../lib/services/biz';
-import { getFileInformation } from '../../lib/utils/helpers';
+import { getFileInformation, readFile } from '../../lib/utils/helpers';
 import { apiUploadFile } from '../../lib/services/file';
 import { appState, setModal, updateFileInfo } from '../../state/app-state';
 import { useAppSelector, useAppDispatch } from '../../lib/utils/hooks';
-import {
-  FileList,
-  StorageFileListModalWithStore,
-  STORAGE_LIST_MODAL,
-} from './FileList';
+import { STORAGE_LIST_MODAL } from './';
+import type { OnSubmit, OnClick, OnChange } from '../../lib';
+import type { FileReadRequest } from '../../lib/utils/helpers';
 
-export type OnSubmit = (event: React.MouseEvent<HTMLFormElement>) => void;
-export type OnClick = (event: React.MouseEvent<HTMLButtonElement>) => void;
-export type OnChange = (event: React.ChangeEvent<HTMLInputElement>) => void;
+const FileList = lazy(() =>
+  import('./FileList').then(module => ({
+    default: module.FileList,
+  }))
+);
+
+const StorageFileListModalWithStore = lazy(() =>
+  import('./StorageFileListModal').then(module => ({
+    default: module.StorageFileListModalWithStore,
+  }))
+);
+
+const WorkflowResultModalWithStore = lazy(() =>
+  import('./WorkflowResultModal').then(module => ({
+    default: module.WorkflowResultModalWithStore,
+  }))
+);
+
+export type FileReadRequestProps = Omit<FileReadRequest, 'file'> & {
+  fileName: string;
+};
 
 export const FileUpload = () => {
   const dispatch = useAppDispatch();
@@ -47,10 +63,39 @@ export const FileUpload = () => {
     }
   }, [files, fileInfos]);
 
+  const readFileRecord = async ({
+    fileName,
+    start,
+    end,
+  }: FileReadRequestProps) => {
+    if (
+      files &&
+      files[0] &&
+      fileName.slice(fileName.indexOf('/') + 1) === files[0].name
+    ) {
+      readFile({ file: files[0], start, end })
+        .then(res => {
+          if (res.error) {
+            console.error('Error getting file info', res.error);
+          } else if (res.result) {
+            console.log('file read result: ', {
+              fileName,
+              start,
+              end,
+              result: res.result,
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error getting file info', error);
+        });
+    }
+  };
+
   const previewFileInfo: OnClick = event => {
     event.preventDefault();
     if (files && files[0]) {
-      getFileInformation(files[0], true)
+      getFileInformation({ file: files[0], samples: true })
         .then(fileInfo => {
           if (fileInfo.error) {
             setErrors([JSON.stringify(fileInfo.error)]);
@@ -104,94 +149,6 @@ export const FileUpload = () => {
   return (
     <form onSubmit={handleSubmit}>
       <Grid container spacing={1}>
-        {loading && (
-          <Grid
-            item
-            xs={12}
-            sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
-          >
-            <Loader />
-            <Typography variant={'h3'}>Loading...</Typography>
-          </Grid>
-        )}
-        {data && (
-          <>
-            <Grid item xs={12}>
-              <Typography
-                variant={'h4'}
-                align='center'
-                color='text.secondary'
-                gutterBottom
-              >
-                {`Upload File`}
-              </Typography>
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
-            >
-              <input
-                type='file'
-                accept='.csv,.pdf,.doc,.docx,.xml,.json'
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              sx={{ display: 'flex', justifyContent: 'center' }}
-            >
-              <Button
-                name={'preview'}
-                disabled={!files || files.length < 1}
-                size={'small'}
-                variant='contained'
-                onClick={previewFileInfo}
-                sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
-              >
-                {'Preview'}
-              </Button>
-              <Button
-                name={'upload'}
-                disabled={!files || files.length < 1 || !previewed}
-                size={'small'}
-                variant='contained'
-                type='submit'
-                sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
-              >
-                {'Upload'}
-              </Button>
-              <Typography
-                sx={{ fontSize: '3rem', marginRight: '2rem' }}
-                variant={'body1'}
-              >
-                {'|'}
-              </Typography>
-              <Button
-                name={'uploaded'}
-                size={'small'}
-                variant='contained'
-                color='info'
-                aria-haspopup='true'
-                onClick={() => dispatch(setModal({ type: STORAGE_LIST_MODAL }))}
-                sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
-              >
-                {'Uploaded Files'}
-              </Button>
-            </Grid>
-            {fileInfos && Object.keys(fileInfos).length > 0 && (
-              <Grid
-                item
-                xs={12}
-                sx={{ display: 'flex', justifyContent: 'center' }}
-              >
-                <FileList files={Object.values(fileInfos)} />
-              </Grid>
-            )}
-          </>
-        )}
-        <StorageFileListModalWithStore />
         <Snackbar
           open={messages.length > 0}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
@@ -222,6 +179,109 @@ export const FileUpload = () => {
             {errors[0]}
           </Alert>
         </Snackbar>
+        {loading && (
+          <Grid
+            item
+            xs={12}
+            sx={{ display: 'flex', justifyContent: 'center', margin: '15px' }}
+          >
+            <Loader />
+          </Grid>
+        )}
+        {data && (
+          <Grid item xs={12}>
+            <Grid container spacing={1}>
+              <Grid item xs={12}>
+                <Typography
+                  variant={'h4'}
+                  align='center'
+                  color='text.secondary'
+                  gutterBottom
+                >
+                  {`Upload File`}
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  margin: '15px',
+                }}
+              >
+                <input
+                  type='file'
+                  accept='.csv,.pdf,.doc,.docx,.xml,.json'
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sx={{ display: 'flex', justifyContent: 'center' }}
+              >
+                <Button
+                  name={'preview'}
+                  disabled={!files || files.length < 1}
+                  size={'small'}
+                  variant='contained'
+                  onClick={previewFileInfo}
+                  sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
+                >
+                  {'Preview'}
+                </Button>
+                <Button
+                  name={'upload'}
+                  disabled={!files || files.length < 1 || !previewed}
+                  size={'small'}
+                  variant='contained'
+                  type='submit'
+                  sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
+                >
+                  {'Upload'}
+                </Button>
+                <Typography
+                  sx={{ fontSize: '3rem', marginRight: '2rem' }}
+                  variant={'body1'}
+                >
+                  {'|'}
+                </Typography>
+                <Button
+                  name={'uploaded'}
+                  size={'small'}
+                  variant='contained'
+                  color='info'
+                  aria-haspopup='true'
+                  onClick={() =>
+                    dispatch(setModal({ type: STORAGE_LIST_MODAL }))
+                  }
+                  sx={{ fontSize: '1.2rem', marginRight: '2rem' }}
+                >
+                  {'Uploaded Files'}
+                </Button>
+              </Grid>
+              {fileInfos && Object.keys(fileInfos).length > 0 && (
+                <Suspense fallback={<Loader />}>
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{ display: 'flex', justifyContent: 'center' }}
+                  >
+                    <FileList files={Object.values(fileInfos)} />
+                  </Grid>
+                </Suspense>
+              )}
+            </Grid>
+          </Grid>
+        )}
+        <Suspense fallback={<Loader />}>
+          <StorageFileListModalWithStore />
+        </Suspense>
+        <WorkflowResultModalWithStore readRecord={readFileRecord} />
+        {/* <Suspense fallback={<Loader />}>
+          <WorkflowResultModalWithStore file={files ? files[0] : undefined}/>
+        </Suspense> */}
       </Grid>
     </form>
   );
