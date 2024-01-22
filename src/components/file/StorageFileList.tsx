@@ -14,6 +14,7 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import { useAppSelector, useAppDispatch } from '../../lib/utils/hooks';
 import {
   appState,
@@ -22,13 +23,14 @@ import {
   deleteUploadedFile,
   searchWorkflowRuns,
   getWorkflowState,
+  updateWorkflowState,
 } from '../../state/app-state';
 import { TableRowCell, TableHeaderCell, WORKFLOW_RESULT_MODAL } from './index';
 import type { AppStorageFile } from '../../state';
 
 export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
   const dispatch = useAppDispatch();
-  const { fileInfos } = useAppSelector(appState);
+  const { fileInfos, results } = useAppSelector(appState);
 
   const handleDelete = (name: string, version: number | string) => {
     if (version === '' || name === '') return;
@@ -50,11 +52,11 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
           const run = resp.payload.runs[0];
           dispatch(
             getWorkflowState({ runId: run.runId, workflowId: run.workflowId })
-          );
+          )
         }
       })
       .catch(err => {
-        console.error('StorageFileList: searchWorkflowRuns error: ', err);
+        console.log('StorageFileList: searchWorkflowRuns error: ', { err, name });
       });
   };
 
@@ -67,6 +69,11 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
 
   const isPreviewed = (file: AppStorageFile) =>
     fileInfos && fileInfos[file.name.slice(file.name.indexOf('/') + 1)]
+      ? true
+      : false;
+
+  const hasStats = (file: AppStorageFile) =>
+    results && results[file.name]
       ? true
       : false;
 
@@ -100,6 +107,7 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
                   <TableRowCell>{file.updatedAt}</TableRowCell>
                   <TableCell sx={{ width: '250px', fontSize: '1.5rem' }}>
                     <Grid container spacing={1}>
+                      {/* preview */}
                       <Grid item>
                         <Tooltip
                           title={
@@ -121,6 +129,8 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
                           </IconButton>
                         </Tooltip>
                       </Grid>
+                      {/* check if has stats */}
+                      {file.stateId === undefined && (
                       <Grid item>
                         <Tooltip
                           title={
@@ -132,11 +142,16 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
                           sx={{ fontSize: '1.5rem' }}
                         >
                           <IconButton onClick={() => handleValidate(file.name)}>
-                            <TaskAltIcon color={'info'} fontSize='large' />
+                            <TaskAltIcon
+                              color={'info'}
+                              fontSize='large'
+                            />
                           </IconButton>
                         </Tooltip>
                       </Grid>
-                      {file.stateId && (
+                      )}
+                      {/* view stats */}
+                      {hasStats(file) && (
                         <Grid item>
                           <Tooltip
                             title={
@@ -151,6 +166,26 @@ export const StorageFileList = ({ files }: { files: AppStorageFile[] }) => {
                               onClick={() => viewRunResults(file.name)}
                             >
                               <QueryStatsIcon color={'info'} fontSize='large' />
+                            </IconButton>
+                          </Tooltip>
+                        </Grid>
+                      )}
+                      {/* process file */}
+                      {file.stateId === '' && isPreviewed(file) && (
+                        <Grid item>
+                          <Tooltip
+                            title={
+                              <Typography sx={{ fontSize: '1rem' }}>
+                                {'process file'}
+                              </Typography>
+                            }
+                            placement='top-start'
+                            sx={{ fontSize: '1.5rem' }}
+                          >
+                            <IconButton
+                              onClick={() => viewRunResults(file.name)}
+                            >
+                              <ArrowCircleRightIcon color={'info'} fontSize='large' />
                             </IconButton>
                           </Tooltip>
                         </Grid>

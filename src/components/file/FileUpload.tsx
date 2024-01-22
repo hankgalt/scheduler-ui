@@ -76,7 +76,7 @@ export const FileUpload = () => {
       readFile({ file: files[0], start, end })
         .then(res => {
           if (res.error) {
-            console.error('Error getting file info', res.error);
+            console.error('FileUpload: error reading file', res.error);
           } else if (res.result) {
             console.log('file read result: ', {
               fileName,
@@ -87,7 +87,7 @@ export const FileUpload = () => {
           }
         })
         .catch(error => {
-          console.error('Error getting file info', error);
+          console.error('FileUpload: error reading file', error);
         });
     }
   };
@@ -104,7 +104,7 @@ export const FileUpload = () => {
           }
         })
         .catch(error => {
-          console.error('Error getting file info', error);
+          console.error('FileUpload: error getting file info', error);
           setErrors([JSON.stringify(error)]);
         });
     }
@@ -141,7 +141,7 @@ export const FileUpload = () => {
         ]);
       })
       .catch(error => {
-        console.error('Error uploading files: ', error);
+        console.error('FileUpload: error uploading files: ', error);
         setErrors([JSON.stringify(error)]);
       });
   };

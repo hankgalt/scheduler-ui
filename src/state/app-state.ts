@@ -135,6 +135,13 @@ export const appStateSlice = createSlice({
           : fileInfo,
       };
     },
+    updateWorkflowState: (state, action: PayloadAction<string>): void => {
+      const fileName = action.payload;
+      console.error('AppState: updateWorkflowState action: ', { action });
+      if (state.uploadedFiles[fileName]) {
+        state.uploadedFiles[fileName].stateId = '';
+      }
+    },
   },
   extraReducers: builder => {
     // uploadSingleFile
@@ -218,7 +225,7 @@ export const appStateSlice = createSlice({
       }),
       builder.addCase(
         searchWorkflowRuns.fulfilled,
-        (state, action: PayloadAction<WorkflowRunsResponse>) => {
+        (state, action: PayloadAction<WorkflowRunsResponse, string, { arg: WorkflowRunSearchParams }>) => {
           state.loading = false;
           if (!action.payload.error) {
             state.errors = [];
@@ -233,13 +240,21 @@ export const appStateSlice = createSlice({
               state.runs = { ...runs };
             }
           } else {
-            state.errors = [JSON.stringify(action.payload.error)];
+            // TODO - handle searchWorkflowRuns error
+            console.log('searchWorkflowRuns.fulfilled - error', action.payload.error);
+            const fileName = action?.meta?.arg?.externalRef || '';
+            if (fileName !== '') {
+              if (state.uploadedFiles[fileName]) {
+                state.uploadedFiles[fileName].stateId = '';
+              }
+            }
           }
         }
       ),
       builder.addCase(searchWorkflowRuns.rejected, state => {
         state.loading = false;
-        state.errors = ['Error searching for workflow runs, request rejected'];
+        // TODO - handle searchWorkflowRuns error
+        console.log('Error searching for workflow runs, request rejected');
       }),
       // getWorkflowState
       builder.addCase(getWorkflowState.pending, state => {
@@ -268,13 +283,15 @@ export const appStateSlice = createSlice({
               }
             }
           } else {
-            state.errors = [JSON.stringify(action.payload.error)];
+            // TODO - handle getWorkflowState error
+            console.log('getWorkflowState.fulfilled - error', action.payload.error);
           }
         }
       ),
       builder.addCase(getWorkflowState.rejected, state => {
         state.loading = false;
-        state.errors = ['Error fetching workflow state, request rejected'];
+        // TODO - handle getWorkflowState error
+        console.log('Error fetching workflow state, request rejected');
       }),
       // getEntity
       builder.addCase(getEntity.pending, state => {
@@ -299,7 +316,7 @@ export const appStateSlice = createSlice({
   },
 });
 
-export const { setModal, removeModal, updateFileInfo } = appStateSlice.actions;
+export const { setModal, removeModal, updateFileInfo, updateWorkflowState } = appStateSlice.actions;
 
 export const appState = (state: RootState) => state.appState;
 

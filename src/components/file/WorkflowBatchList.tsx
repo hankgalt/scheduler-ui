@@ -14,10 +14,11 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import BorderColorIcon from '@mui/icons-material/BorderColor';
 import TableContainer from '@mui/material/TableContainer';
-import {
-  BusinessEntityType,
-  type WorkflowResult,
+import type {
+  WorkflowResult,
+  SuccessResult,
 } from '@hankgalt/scheduler-client/dist/lib/pkg';
+import { BusinessEntityType } from '@hankgalt/scheduler-client/dist/lib/pkg';
 import { useAppDispatch } from '../../lib/utils/hooks';
 import { getEntity } from '../../state/app-state';
 import type { FileReadRequest } from '../../lib/utils/helpers';
@@ -29,12 +30,17 @@ interface WorkflowBatchListProps {
   readRecord: (req: FileReadRequestProps) => Promise<FileReadResponse>;
 }
 
+export type OnClick = (event: React.MouseEvent<HTMLAnchorElement>) => void;
+
 export const WorkflowBatchList = ({
   result,
   readRecord,
 }: WorkflowBatchListProps) => {
   const dispatch = useAppDispatch();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [successResult, setSuccessResult] = useState<SuccessResult | null>(
+    null
+  );
   const open = Boolean(anchorEl);
 
   const readBatchRecords = async ({
@@ -87,13 +93,13 @@ export const WorkflowBatchList = ({
                 <Grid container spacing={1}>
                   {res.results &&
                     res.results.length > 0 &&
-                    res.results.map((result, idx) => (
+                    res.results.map((rest, idx) => (
                       <Grid item key={`${index}-${idx}-result`}>
                         <Tooltip
                           title={
                             <Typography
                               sx={{ fontSize: '1rem' }}
-                            >{`end: ${result.end}, resultId: ${result.resultId}`}</Typography>
+                            >{`end: ${rest.end}, resultId: ${rest.resultId}`}</Typography>
                           }
                           placement='top-start'
                           sx={{
@@ -106,9 +112,12 @@ export const WorkflowBatchList = ({
                             color={'success'}
                             sx={{ borderRadius: 3, fontSize: '1.5rem' }}
                             startIcon={<BorderColorIcon />}
-                            onClick={e => setAnchorEl(e.currentTarget)}
+                            onClick={e => {
+                              setSuccessResult(rest);
+                              setAnchorEl(e.currentTarget);
+                            }}
                           >
-                            {result.start}
+                            {rest.start}
                           </Button>
                         </Tooltip>
                         <Menu
@@ -121,26 +130,29 @@ export const WorkflowBatchList = ({
                           }}
                         >
                           <MenuItem
-                            onClick={() =>
-                              readFileRecord({
-                                start: parseInt(result.start),
-                                end: parseInt(result.end),
-                              })
-                            }
+                            onClick={() => {
+                              if (successResult) {
+                                readFileRecord({
+                                  start: parseInt(successResult.start),
+                                  end: parseInt(successResult.end),
+                                });
+                              }
+                            }}
                           >
                             {'read file record'}
                           </MenuItem>
                           <MenuItem
-                            onClick={
-                              // () => console.log('read DB record')
-                              () =>
+                            onClick={() => {
+                              if (successResult) {
                                 dispatch(
                                   getEntity({
-                                    id: result.resultId,
-                                    type: BusinessEntityType.AGENT,
+                                    id: successResult.resultId,
+                                    type: result.type as BusinessEntityType,
                                   })
-                                )
-                            }
+                                );
+                              }
+                              setAnchorEl(null);
+                            }}
                           >
                             {'read DB record'}
                           </MenuItem>
@@ -172,7 +184,7 @@ export const WorkflowBatchList = ({
                             sx={{ borderRadius: 3, fontSize: '1.5rem' }}
                             startIcon={<BorderColorIcon />}
                             onClick={() =>
-                              readBatchRecords({
+                              readFileRecord({
                                 start: parseInt(err.start),
                                 end: parseInt(err.end),
                               })
