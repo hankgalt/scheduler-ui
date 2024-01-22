@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useDispatch, TypedUseSelectorHook, useSelector } from 'react-redux';
 import { useFetch } from 'usehooks-ts';
-import { BASE_URL } from '../index';
-import type { AppDispatch, RootState } from '../../state/store';
+import { BASE_URL } from '../../index';
 
 export function useDataFetch<T>(url: string) {
   const { data, error } = useFetch<T>(`${BASE_URL}${url}`);
@@ -24,7 +22,3 @@ export function useDataFetch<T>(url: string) {
     loading,
   };
 }
-
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
