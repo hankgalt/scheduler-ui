@@ -1,36 +1,41 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import { useBizFetch } from './lib/services/biz';
-import { FileUpload } from './components/file/FileUpload';
 import { Loader } from './components/Loader';
+
+const FileUpload = lazy(() =>
+  import('./components/file/FileUpload').then(module => ({
+    default: module.FileUpload,
+  }))
+);
 
 const App = () => {
   const { data, error, loading } = useBizFetch();
 
   return (
-    <React.Suspense fallback={<Loader />}>
-      {loading && <Loader />}
-      <Box sx={{ padding: '5px' }}>
-        <Grid container spacing={1}>
-          {error && (
-            <Grid item xs={12}>
-              <p>There is an error.</p>
-            </Grid>
-          )}
-          {loading && (
-            <Grid item xs={12}>
-              <p>Loading...</p>
-            </Grid>
-          )}
-          {data && (
+    <Box sx={{ padding: '5px' }}>
+      <Grid container spacing={1}>
+        {loading && (
+          <Grid item xs={12}>
+            <Loader />
+          </Grid>
+        )}
+        {error && (
+          <Grid item xs={12}>
+            <p>There is an error.</p>
+          </Grid>
+        )}
+        {data && (
+          <Suspense fallback={<Loader />}>
             <Grid item xs={12}>
               <FileUpload />
             </Grid>
-          )}
-        </Grid>
-      </Box>
-    </React.Suspense>
+          </Suspense>
+        )}
+      </Grid>
+    </Box>
   );
 };
+
 export default App;
