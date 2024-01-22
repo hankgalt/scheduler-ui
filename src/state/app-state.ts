@@ -7,29 +7,49 @@ import type {
 } from '@hankgalt/cloud-storage-client';
 import type {
   WorkflowRunSearchParams,
+  FileWorkflowStateRequest,
   WorkflowRunsResponse,
+  WorkflowStateResponse,
   SchedulerWorkflowRun,
-} from '@hankgalt/scheduler-client';
+  WorkflowResult,
+  BusinessEntityRequest,
+  BusinessEntityResponse,
+} from '@hankgalt/scheduler-client/dist/lib/pkg';
 import { RootState } from './store';
 import {
   apiUploadFile,
   apiListBucketFiles,
   apiDeleteFile,
 } from '../lib/services/file';
-import { apiSearchWorkflowRuns } from '../lib/services/biz';
+import {
+  apiSearchWorkflowRuns,
+  apiFileWorkflowState,
+  apiGetEntity,
+} from '../lib/services/biz';
 import type { FileInformation } from '../lib/utils/helpers';
 
 interface ModalProps {
   type: string;
+  data?: {
+    [key: string]: any;
+  };
 }
+
+interface HasState {
+  stateId?: string;
+}
+
+export interface AppStorageFile extends StorageFile, HasState {}
+export interface AppFileInformation extends FileInformation, HasState {}
 
 interface AppState {
   loading: boolean;
   errors: string[];
   modal?: ModalProps;
-  uploadedFiles: { [key: string]: StorageFile };
-  fileInfos: { [key: string]: FileInformation };
+  uploadedFiles: { [key: string]: AppStorageFile };
+  fileInfos: { [key: string]: AppFileInformation };
   runs: { [key: string]: SchedulerWorkflowRun };
+  results: { [key: string]: WorkflowResult };
 }
 
 export const uploadSingleFile = createAsyncThunk(
@@ -56,8 +76,21 @@ export const deleteUploadedFile = createAsyncThunk(
 export const searchWorkflowRuns = createAsyncThunk(
   '/workflow/search',
   async (params: WorkflowRunSearchParams) => {
-    console.log('searchWorkflowRuns - params', params);
     return await apiSearchWorkflowRuns(params);
+  }
+);
+
+export const getWorkflowState = createAsyncThunk(
+  '/workflow/state',
+  async (params: FileWorkflowStateRequest) => {
+    return await apiFileWorkflowState(params);
+  }
+);
+
+export const getEntity = createAsyncThunk(
+  '/entity/get',
+  async (params: BusinessEntityRequest) => {
+    return await apiGetEntity(params);
   }
 );
 
@@ -67,6 +100,7 @@ const initialState: AppState = {
   uploadedFiles: {},
   fileInfos: {},
   runs: {},
+  results: {},
 };
 
 export const appStateSlice = createSlice({
@@ -92,7 +126,13 @@ export const appStateSlice = createSlice({
       const fileInfo = action.payload;
       state.fileInfos = {
         ...state.fileInfos,
-        [fileInfo.name]: fileInfo,
+        [fileInfo.name]: state.fileInfos[fileInfo.name]
+          ? {
+              ...state.fileInfos[fileInfo.name],
+              ...fileInfo,
+              stateId: state.fileInfos[fileInfo.name].stateId,
+            }
+          : fileInfo,
       };
     },
   },
@@ -132,7 +172,13 @@ export const appStateSlice = createSlice({
             for (const file of action.payload.files) {
               payloadFiles = {
                 ...payloadFiles,
-                [file.name]: file,
+                [file.name]: state.uploadedFiles[file.name]
+                  ? {
+                      ...state.uploadedFiles[file.name],
+                      ...file,
+                      stateId: state.uploadedFiles[file.name].stateId,
+                    }
+                  : file,
               };
             }
             state.uploadedFiles = { ...payloadFiles };
@@ -193,7 +239,62 @@ export const appStateSlice = createSlice({
       ),
       builder.addCase(searchWorkflowRuns.rejected, state => {
         state.loading = false;
-        state.errors = ['Error deleting file, request rejected'];
+        state.errors = ['Error searching for workflow runs, request rejected'];
+      }),
+      // getWorkflowState
+      builder.addCase(getWorkflowState.pending, state => {
+        state.loading = true;
+      }),
+      builder.addCase(
+        getWorkflowState.fulfilled,
+        (state, action: PayloadAction<WorkflowStateResponse>) => {
+          state.loading = false;
+          if (!action.payload.error) {
+            state.errors = [];
+            if (action.payload.state) {
+              state.results = {
+                ...state.results,
+                [action.payload.state.fileName]: {
+                  ...action.payload.state,
+                  batches: action.payload.state.batches.sort((a, b) => {
+                    return parseInt(a.batchIndex) - parseInt(b.batchIndex);
+                  }),
+                },
+              };
+
+              if (state.uploadedFiles[action.payload.state.fileName]) {
+                state.uploadedFiles[action.payload.state.fileName].stateId =
+                  action.payload.state.fileName;
+              }
+            }
+          } else {
+            state.errors = [JSON.stringify(action.payload.error)];
+          }
+        }
+      ),
+      builder.addCase(getWorkflowState.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error fetching workflow state, request rejected'];
+      }),
+      // getEntity
+      builder.addCase(getEntity.pending, state => {
+        state.loading = true;
+      }),
+      builder.addCase(
+        getEntity.fulfilled,
+        (state, action: PayloadAction<BusinessEntityResponse>) => {
+          state.loading = false;
+          if (!action.payload.error) {
+            state.errors = [];
+            console.log('getEntity.fulfilled - action.payload', action.payload);
+          } else {
+            state.errors = [JSON.stringify(action.payload.error)];
+          }
+        }
+      ),
+      builder.addCase(getEntity.rejected, state => {
+        state.loading = false;
+        state.errors = ['Error fetching business entity, request rejected'];
       });
   },
 });
