@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import apiRoutes from './routes';
 import fileAPIRoutes from './routes/file';
 import workflowAPIRoutes from './routes/workflow';
+import entityAPIRoutes from './routes/entity';
 
 const { PORT, NODE_ENV } = process.env;
 const app: express.Application = express();
@@ -31,6 +32,9 @@ app.use('/api/file', fileAPIRoutes);
 
 // Workflow API Routes
 app.use('/api/workflow', workflowAPIRoutes);
+
+// Entity API Routes
+app.use('/api/entity', entityAPIRoutes);
 
 // Other API Routes
 app.use('/api', apiRoutes);

@@ -1547,10 +1547,10 @@
   dependencies:
     "@google-cloud/storage" "^7.7.0"
 
-"@hankgalt/scheduler-client@0.0.13":
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/@hankgalt/scheduler-client/-/scheduler-client-0.0.13.tgz#f16f6cb8c8e9f3e5e276e66e0b586d670e80a380"
-  integrity sha512-6qthQIbEW/WmnRjxeWr4hRrRgNKipYcrZI7HHED/dCRjvaVhejW/xjp8oZmDf59z9AsWNPEi/tvogf4M4igBJg==
+"@hankgalt/scheduler-client@0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@hankgalt/scheduler-client/-/scheduler-client-0.0.16.tgz#833bff931b160e506d8a09b2beb577b7ab97c9ff"
+  integrity sha512-yTB6QWi858m1ZOhB82hHoXjuPlFPAyT0TdaRPSWFcUC7LD6Th/UsXljn7gw8xT++2XW1OJo3/KfVPAxPUebxyw==
   dependencies:
     "@grpc/grpc-js" "^1.9.14"
 

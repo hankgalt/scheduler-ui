@@ -7,7 +7,6 @@ const workflowAPIRouter = express.Router();
 
 workflowAPIRouter.post('/search', async (req: Request, res: Response) => {
   const reqBody = req.body;
-  console.log('/api/workflow/search - reqBody', reqBody);
   const { runId, workflowId, externalRef, type, status } = reqBody;
   try {
     const { runs, error } = await schedulerClient.searchWorkflowRuns({
@@ -24,7 +23,28 @@ workflowAPIRouter.post('/search', async (req: Request, res: Response) => {
     }
     res.status(200).json({ runs });
   } catch (error) {
-    console.log('/file/list: error fetching workflow runs', error);
+    console.log('/workflow/search: error fetching workflow runs', error);
+    res.status(500).json({ error });
+  }
+});
+
+workflowAPIRouter.post('/query', async (req: Request, res: Response) => {
+  const reqBody = req.body;
+  console.log('/workflow/query - reqBody', reqBody);
+  const { runId, workflowId } = reqBody;
+  try {
+    const { state, error } = await schedulerClient.fileWorkflowState({
+      runId,
+      workflowId,
+    });
+    if (error) {
+      console.log('/workflow/query: error fetching workflow runs', error);
+      res.status(500).json({ error });
+      return;
+    }
+    res.status(200).json({ state });
+  } catch (error) {
+    console.log('/workflow/query: error fetching workflow runs', error);
     res.status(500).json({ error });
   }
 });
